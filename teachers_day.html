@@ -1,0 +1,754 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Access Granted // Teacher's Day</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Share+Tech+Mono&family=Orbitron:wght@500;700;900&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --bg: #060a10;
+    --bg2: #0a121c;
+    --grid: #0e2033;
+    --neon: #00ffb3;
+    --cyan: #35d9ff;
+    --pink: #ff5d9e;
+    --gold: #ffd166;
+    --text: #d9f6ff;
+    --text-dim: #6d94a8;
+    --mono: 'Share Tech Mono', monospace;
+    --disp: 'Orbitron', sans-serif;
+  }
+  *{box-sizing:border-box; -webkit-tap-highlight-color:transparent;}
+  html,body{
+    margin:0; padding:0; height:100%;
+    background:var(--bg);
+    color:var(--text);
+    font-family:var(--mono);
+    overflow:hidden;
+  }
+  #app{position:relative; width:100vw; height:100vh; overflow:hidden;}
+
+  /* ---------- background grid + scan effect ---------- */
+  .bg-grid{
+    position:absolute; inset:0;
+    background-image:
+      linear-gradient(var(--grid) 1px, transparent 1px),
+      linear-gradient(90deg, var(--grid) 1px, transparent 1px);
+    background-size: 38px 38px;
+    background-position:center;
+    opacity:.55;
+    animation: gridshift 18s linear infinite;
+    z-index:0;
+  }
+  @keyframes gridshift{
+    0%{background-position: 0 0;}
+    100%{background-position: 380px 380px;}
+  }
+  .scanline{
+    position:absolute; inset:0; z-index:1; pointer-events:none;
+    background: repeating-linear-gradient(
+      to bottom,
+      rgba(0,255,179,0.035) 0px,
+      rgba(0,255,179,0.035) 1px,
+      transparent 2px,
+      transparent 4px
+    );
+    mix-blend-mode: screen;
+  }
+  .vignette{
+    position:absolute; inset:0; z-index:1; pointer-events:none;
+    background: radial-gradient(ellipse at center, transparent 40%, rgba(0,0,0,0.75) 100%);
+  }
+
+  /* ---------- screens ---------- */
+  .screen{
+    position:absolute; inset:0; z-index:2;
+    display:flex; align-items:center; justify-content:center;
+    padding: 24px;
+    opacity:0; visibility:hidden; pointer-events:none;
+    transform: scale(.97);
+    transition: opacity .5s ease, transform .5s ease;
+  }
+  .screen.active{
+    opacity:1; visibility:visible; pointer-events:auto;
+    transform: scale(1);
+  }
+
+  .panel{
+    width:100%; max-width:520px;
+    border:1px solid rgba(0,255,179,.35);
+    background: linear-gradient(180deg, rgba(10,18,28,.9), rgba(6,10,16,.95));
+    box-shadow: 0 0 0 1px rgba(0,255,179,.05), 0 0 40px rgba(0,255,179,.08), inset 0 0 60px rgba(0,255,179,.03);
+    padding: 30px 26px 26px;
+    position:relative;
+  }
+  .panel::before{
+    content:"";
+    position:absolute; top:-1px; left:-1px; right:-1px; height:26px;
+    background: rgba(0,255,179,.06);
+    border-bottom:1px solid rgba(0,255,179,.25);
+  }
+  .panel-head{
+    position:relative; z-index:1;
+    display:flex; align-items:center; gap:8px;
+    font-size:12px; letter-spacing:2px; color:var(--neon);
+    padding-bottom:14px; margin-bottom:20px;
+    border-bottom:1px dashed rgba(0,255,179,.2);
+  }
+  .dot{width:8px;height:8px;border-radius:50%;background:var(--pink); box-shadow:0 0 8px var(--pink);}
+  .dot:nth-child(2){background:var(--gold); box-shadow:0 0 8px var(--gold);}
+  .dot:nth-child(3){background:var(--neon); box-shadow:0 0 8px var(--neon);}
+  .tag{margin-left:auto; color:var(--text-dim); font-size:11px;}
+
+  h1.title{
+    font-family:var(--disp);
+    font-size:22px;
+    letter-spacing:1px;
+    color:var(--neon);
+    margin:0 0 6px;
+    text-shadow:0 0 12px rgba(0,255,179,.5);
+  }
+  p.sub{
+    color:var(--text-dim);
+    font-size:14px;
+    line-height:1.6;
+    margin:0 0 22px;
+  }
+  .prompt-line{
+    color:var(--cyan);
+    font-size:13px;
+    margin-bottom:8px;
+  }
+  .prompt-line::before{ content:"> "; color:var(--neon);}
+
+  input[type="text"]{
+    width:100%;
+    background: rgba(0,0,0,.4);
+    border:1px solid rgba(0,255,179,.35);
+    color:var(--text);
+    font-family:var(--mono);
+    font-size:16px;
+    padding:12px 14px;
+    outline:none;
+    caret-color:var(--neon);
+  }
+  input[type="text"]:focus{
+    border-color:var(--neon);
+    box-shadow:0 0 12px rgba(0,255,179,.25);
+  }
+  input[type="text"]::placeholder{color:#3d5a68;}
+
+  .btn{
+    margin-top:20px;
+    width:100%;
+    background:transparent;
+    border:1px solid var(--neon);
+    color:var(--neon);
+    font-family:var(--disp);
+    font-size:13px;
+    letter-spacing:2px;
+    padding:13px 16px;
+    cursor:pointer;
+    position:relative;
+    transition: all .2s ease;
+  }
+  .btn:hover:not(:disabled){
+    background:rgba(0,255,179,.1);
+    box-shadow:0 0 18px rgba(0,255,179,.35);
+  }
+  .btn:disabled{
+    opacity:.35; cursor:not-allowed;
+  }
+  .btn.alt{ border-color:var(--pink); color:var(--pink);}
+  .btn.alt:hover:not(:disabled){ background:rgba(255,93,158,.1); box-shadow:0 0 18px rgba(255,93,158,.35);}
+
+  .error{
+    color:var(--pink); font-size:12px; margin-top:8px; min-height:16px;
+  }
+
+  /* ---------- slider verify ---------- */
+  .slider-wrap{
+    position:relative;
+    height:52px;
+    background:rgba(0,0,0,.4);
+    border:1px solid rgba(0,255,179,.3);
+    display:flex; align-items:center;
+    overflow:hidden;
+    user-select:none;
+  }
+  .slider-track-label{
+    position:absolute; left:0; right:0; text-align:center;
+    font-size:12px; letter-spacing:1.5px; color:var(--text-dim);
+    pointer-events:none;
+  }
+  .slider-fill{
+    position:absolute; top:0; left:0; bottom:0;
+    width:0%;
+    background:linear-gradient(90deg, rgba(0,255,179,.12), rgba(0,255,179,.28));
+    transition:width .05s linear;
+  }
+  .slider-handle{
+    position:absolute; top:2px; left:2px;
+    width:48px; height:46px;
+    background:rgba(0,255,179,.15);
+    border:1px solid var(--neon);
+    color:var(--neon);
+    display:flex; align-items:center; justify-content:center;
+    font-size:18px;
+    cursor:grab;
+    touch-action:none;
+    box-shadow:0 0 14px rgba(0,255,179,.35);
+  }
+  .slider-handle:active{cursor:grabbing;}
+
+  /* ---------- scratch card ---------- */
+  .scratch-wrap{
+    position:relative;
+    width:100%;
+    height:230px;
+    border:1px solid rgba(0,255,179,.3);
+    overflow:hidden;
+    background:#04070b;
+  }
+  .scratch-below{
+    position:absolute; inset:0;
+    display:flex; flex-direction:column; align-items:center; justify-content:center;
+    gap:14px;
+    background: radial-gradient(circle at center, rgba(0,255,179,.08), transparent 70%);
+  }
+  .scratch-below span{
+    font-family:var(--disp); font-size:13px; letter-spacing:2px; color:var(--text-dim);
+  }
+  canvas#scratchCanvas{
+    position:absolute; inset:0;
+    touch-action:none;
+    cursor:crosshair;
+  }
+  #revealBtn{
+    display:none;
+    font-family:var(--disp);
+    font-size:14px; letter-spacing:2px;
+    padding:14px 26px;
+    border:1px solid var(--gold);
+    color:var(--gold);
+    background:rgba(255,209,102,.08);
+    cursor:pointer;
+    box-shadow:0 0 20px rgba(255,209,102,.25);
+    animation: pulse 1.6s ease-in-out infinite;
+  }
+  @keyframes pulse{
+    0%,100%{ box-shadow:0 0 12px rgba(255,209,102,.25);}
+    50%{ box-shadow:0 0 26px rgba(255,209,102,.55);}
+  }
+  .scratch-hint{
+    text-align:center; color:var(--text-dim); font-size:11px; margin-top:10px; letter-spacing:1px;
+  }
+
+  /* ---------- final message screen ---------- */
+  #screen-final{
+    padding:16px;
+  }
+  .final-panel{
+    max-width:600px; width:100%;
+    background: linear-gradient(180deg, rgba(14,10,20,.92), rgba(8,6,12,.96));
+    border:1px solid rgba(255,209,102,.3);
+    box-shadow:0 0 60px rgba(255,209,102,.1), inset 0 0 80px rgba(255,93,158,.04);
+    padding:34px 28px;
+    position:relative;
+    max-height:88vh;
+    overflow-y:auto;
+  }
+  .final-eyebrow{
+    font-family:var(--disp);
+    font-size:11px; letter-spacing:3px; color:var(--gold);
+    margin-bottom:10px;
+  }
+  .final-heading{
+    font-family:var(--disp);
+    font-size:24px;
+    color:#fff;
+    margin:0 0 18px;
+    line-height:1.3;
+    text-shadow:0 0 16px rgba(255,209,102,.4);
+  }
+  .final-heading .name{
+    color:var(--pink);
+    text-shadow:0 0 16px rgba(255,93,158,.6);
+  }
+  .final-body{
+    font-family:var(--mono);
+    font-size:15.5px;
+    line-height:1.85;
+    color:#f0e9dd;
+    white-space:pre-wrap;
+  }
+  .final-signoff{
+    margin-top:22px; font-size:12px; color:var(--text-dim); letter-spacing:1px;
+  }
+  .sound-toggle{
+    position:absolute; top:14px; right:14px;
+    font-size:11px; color:var(--text-dim);
+    border:1px solid rgba(255,209,102,.3);
+    padding:6px 10px; cursor:pointer;
+    background:rgba(0,0,0,.3);
+  }
+
+  /* ---------- floating icons (screens 1-3, subtle) ---------- */
+  .float-layer{
+    position:absolute; inset:0; z-index:1; pointer-events:none; overflow:hidden;
+  }
+  .float-item{
+    position:absolute;
+    top:110%;
+    font-size:22px;
+    opacity:.75;
+    animation-name: floatUp;
+    animation-timing-function: linear;
+    animation-iteration-count: infinite;
+    filter: drop-shadow(0 0 6px rgba(0,255,179,.25));
+  }
+  @keyframes floatUp{
+    0%{ transform: translateY(0) translateX(0) rotate(0deg); opacity:0; }
+    10%{ opacity:.85; }
+    90%{ opacity:.85; }
+    100%{ transform: translateY(-120vh) translateX(var(--drift,0px)) rotate(360deg); opacity:0; }
+  }
+
+  /* celebration mode has more color + bigger icons */
+  .celebrate .float-item{
+    filter: drop-shadow(0 0 8px rgba(255,209,102,.4));
+    font-size:26px;
+  }
+
+  footer.credit{
+    position:absolute; bottom:10px; left:0; right:0; text-align:center;
+    font-size:10px; letter-spacing:1px; color:#274554; z-index:2;
+  }
+
+  @media (max-width:480px){
+    .panel, .final-panel{padding:22px 18px;}
+    h1.title{font-size:19px;}
+    .final-heading{font-size:20px;}
+  }
+
+  @media (prefers-reduced-motion: reduce){
+    .bg-grid, .float-item{animation:none !important;}
+  }
+</style>
+</head>
+<body>
+<div id="app">
+  <div class="bg-grid"></div>
+  <div class="scanline"></div>
+  <div class="float-layer" id="floatLayer"></div>
+  <div class="vignette"></div>
+
+  <!-- SCREEN 1: NAME -->
+  <section class="screen active" id="screen-name">
+    <div class="panel">
+      <div class="panel-head">
+        <span class="dot"></span><span class="dot"></span><span class="dot"></span>
+        <span class="tag">SESSION::TEACHERS_DAY.INIT</span>
+      </div>
+      <h1 class="title">IDENTITY VERIFICATION</h1>
+      <p class="sub">A message has been encrypted and is waiting to be unlocked. State your name to begin decryption.</p>
+      <div class="prompt-line">enter_name</div>
+      <input type="text" id="nameInput" placeholder="Type your name..." maxlength="40" autocomplete="off">
+      <div class="error" id="nameError"></div>
+      <button class="btn" id="nameSubmit">INITIATE →</button>
+    </div>
+  </section>
+
+  <!-- SCREEN 2: SLIDER VERIFY -->
+  <section class="screen" id="screen-verify">
+    <div class="panel">
+      <div class="panel-head">
+        <span class="dot"></span><span class="dot"></span><span class="dot"></span>
+        <span class="tag">STEP 2 / 3</span>
+      </div>
+      <h1 class="title">HUMAN VERIFICATION</h1>
+      <p class="sub" id="verifySub">Slide to confirm — every bit of effort you put in today for your teacher counts.</p>
+      <div class="slider-wrap" id="sliderWrap">
+        <div class="slider-fill" id="sliderFill"></div>
+        <div class="slider-track-label" id="sliderLabel">SLIDE TO VERIFY →</div>
+        <div class="slider-handle" id="sliderHandle">▶</div>
+      </div>
+      <div class="error" id="verifyError"></div>
+    </div>
+  </section>
+
+  <!-- SCREEN 3: SCRATCH CARD -->
+  <section class="screen" id="screen-scratch">
+    <div class="panel">
+      <div class="panel-head">
+        <span class="dot"></span><span class="dot"></span><span class="dot"></span>
+        <span class="tag">STEP 3 / 3</span>
+      </div>
+      <h1 class="title">DECRYPTING GIFT...</h1>
+      <p class="sub">Scratch the surface below to reveal your access key.</p>
+      <div class="scratch-wrap" id="scratchWrap">
+        <div class="scratch-below">
+          <span>🎁 SPECIAL MESSAGE LOCKED</span>
+          <button id="revealBtn">OPEN MESSAGE ✦</button>
+        </div>
+        <canvas id="scratchCanvas"></canvas>
+      </div>
+      <div class="scratch-hint">use your mouse or finger to scratch the card</div>
+    </div>
+  </section>
+
+  <!-- SCREEN 4: FINAL MESSAGE -->
+  <section class="screen" id="screen-final">
+    <div class="final-panel">
+      <div class="sound-toggle" id="soundToggle">🔊 SOUND: ON</div>
+      <div class="final-eyebrow">// TRANSMISSION DECRYPTED</div>
+      <h1 class="final-heading">Dear <span class="name" id="finalName">Student</span>,</h1>
+      <div class="final-body" id="finalBody"></div>
+      <div class="final-signoff">— sent with gratitude, this Teacher's Day 🌸</div>
+    </div>
+  </section>
+
+  <footer class="credit">made with ❤️ for Teacher's Day</footer>
+</div>
+
+<script>
+(function(){
+  const app = document.getElementById('app');
+  const screens = {
+    name: document.getElementById('screen-name'),
+    verify: document.getElementById('screen-verify'),
+    scratch: document.getElementById('screen-scratch'),
+    final: document.getElementById('screen-final'),
+  };
+  function goTo(key){
+    Object.values(screens).forEach(s=>s.classList.remove('active'));
+    screens[key].classList.add('active');
+  }
+
+  // ---------------- floating icons (ambient, screens 1-3) ----------------
+  const floatLayer = document.getElementById('floatLayer');
+  const ambientIcons = ['✏️','🖊️','🧽','📘','💾','🔐'];
+  const celebrateIcons = ['🌸','🌷','🎉','🎊','✨','🌼','💮','🎈'];
+  let spawnTimer = null;
+  let currentSet = ambientIcons;
+
+  function spawnIcon(){
+    const el = document.createElement('div');
+    el.className = 'float-item';
+    el.textContent = currentSet[Math.floor(Math.random()*currentSet.length)];
+    const left = Math.random()*94 + 2;
+    const duration = 9 + Math.random()*8;
+    const drift = (Math.random()*160 - 80) + 'px';
+    el.style.left = left + 'vw';
+    el.style.setProperty('--drift', drift);
+    el.style.animationDuration = duration + 's';
+    el.style.fontSize = (16 + Math.random()*14) + 'px';
+    floatLayer.appendChild(el);
+    setTimeout(()=> el.remove(), duration*1000 + 500);
+  }
+  function startFloating(intervalMs){
+    if(spawnTimer) clearInterval(spawnTimer);
+    spawnTimer = setInterval(spawnIcon, intervalMs);
+  }
+  startFloating(900);
+  for(let i=0;i<6;i++) setTimeout(spawnIcon, i*250);
+
+  // ---------------- SCREEN 1: name ----------------
+  const nameInput = document.getElementById('nameInput');
+  const nameSubmit = document.getElementById('nameSubmit');
+  const nameError = document.getElementById('nameError');
+  let studentName = '';
+
+  function submitName(){
+    const val = nameInput.value.trim();
+    if(!val){
+      nameError.textContent = 'error: name field cannot be empty';
+      nameInput.focus();
+      return;
+    }
+    studentName = val;
+    nameError.textContent = '';
+    goTo('verify');
+  }
+  nameSubmit.addEventListener('click', submitName);
+  nameInput.addEventListener('keydown', (e)=>{ if(e.key === 'Enter') submitName(); });
+  setTimeout(()=> nameInput.focus(), 400);
+
+  // ---------------- SCREEN 2: slider verify ----------------
+  const sliderWrap = document.getElementById('sliderWrap');
+  const sliderHandle = document.getElementById('sliderHandle');
+  const sliderFill = document.getElementById('sliderFill');
+  const sliderLabel = document.getElementById('sliderLabel');
+  let dragging = false, verified = false;
+
+  function wrapWidth(){ return sliderWrap.clientWidth - sliderHandle.clientWidth - 4; }
+
+  function setHandleX(x){
+    const max = wrapWidth();
+    x = Math.max(0, Math.min(x, max));
+    sliderHandle.style.left = (2+x) + 'px';
+    const pct = (x / max) * 100;
+    sliderFill.style.width = (pct) + '%';
+    if(pct >= 96 && !verified){
+      verified = true;
+      sliderLabel.textContent = 'VERIFIED ✓';
+      sliderHandle.style.left = (2+max)+'px';
+      sliderFill.style.width = '100%';
+      setTimeout(()=> goTo('scratch'), 500);
+    }
+  }
+
+  function pointerX(e){
+    const rect = sliderWrap.getBoundingClientRect();
+    const clientX = e.touches ? e.touches[0].clientX : e.clientX;
+    return clientX - rect.left - sliderHandle.clientWidth/2;
+  }
+
+  function startDrag(e){
+    if(verified) return;
+    dragging = true;
+    e.preventDefault();
+  }
+  function moveDrag(e){
+    if(!dragging || verified) return;
+    setHandleX(pointerX(e));
+  }
+  function endDrag(){
+    if(!dragging || verified) return;
+    dragging = false;
+    // snap back if not verified
+    setHandleX(0);
+  }
+  sliderHandle.addEventListener('mousedown', startDrag);
+  sliderHandle.addEventListener('touchstart', startDrag, {passive:false});
+  window.addEventListener('mousemove', moveDrag);
+  window.addEventListener('touchmove', moveDrag, {passive:false});
+  window.addEventListener('mouseup', endDrag);
+  window.addEventListener('touchend', endDrag);
+
+  // ---------------- SCREEN 3: scratch card ----------------
+  const scratchWrap = document.getElementById('scratchWrap');
+  const canvas = document.getElementById('scratchCanvas');
+  const ctx = canvas.getContext('2d');
+  const revealBtn = document.getElementById('revealBtn');
+  let scratchInit = false;
+  let isScratching = false;
+  let clearedPct = 0;
+
+  function initScratch(){
+    const rect = scratchWrap.getBoundingClientRect();
+    canvas.width = rect.width;
+    canvas.height = rect.height;
+
+    const grad = ctx.createLinearGradient(0,0,canvas.width,canvas.height);
+    grad.addColorStop(0, '#0e2a24');
+    grad.addColorStop(1, '#123a2e');
+    ctx.fillStyle = grad;
+    ctx.fillRect(0,0,canvas.width,canvas.height);
+
+    ctx.fillStyle = 'rgba(0,255,179,0.9)';
+    ctx.font = 'bold 15px "Share Tech Mono", monospace';
+    ctx.textAlign = 'center';
+    ctx.fillText('◆ SCRATCH HERE TO DECRYPT ◆', canvas.width/2, canvas.height/2);
+    ctx.font = '11px "Share Tech Mono", monospace';
+    ctx.fillStyle = 'rgba(0,255,179,0.55)';
+    ctx.fillText('drag across the surface', canvas.width/2, canvas.height/2 + 22);
+
+    ctx.globalCompositeOperation = 'destination-out';
+    scratchInit = true;
+  }
+
+  function getPos(e){
+    const rect = canvas.getBoundingClientRect();
+    const clientX = e.touches ? e.touches[0].clientX : e.clientX;
+    const clientY = e.touches ? e.touches[0].clientY : e.clientY;
+    return { x: clientX - rect.left, y: clientY - rect.top };
+  }
+
+  function scratchAt(x,y){
+    ctx.beginPath();
+    ctx.arc(x,y,26,0,Math.PI*2);
+    ctx.fill();
+  }
+
+  function checkCleared(){
+    // sample pixel alpha to estimate clearance %, throttled
+    const w = canvas.width, h = canvas.height;
+    const data = ctx.getImageData(0,0,w,h).data;
+    let transparent = 0;
+    const step = 40; // sample sparsely for perf
+    let total = 0;
+    for(let i=3;i<data.length;i+=4*step){
+      total++;
+      if(data[i] < 40) transparent++;
+    }
+    clearedPct = (transparent/total)*100;
+    if(clearedPct > 55){
+      canvas.style.transition = 'opacity .5s ease';
+      canvas.style.opacity = '0';
+      canvas.style.pointerEvents = 'none';
+      revealBtn.style.display = 'inline-block';
+    }
+  }
+
+  let lastCheck = 0;
+  function handleScratchMove(e){
+    if(!isScratching) return;
+    e.preventDefault();
+    const p = getPos(e);
+    scratchAt(p.x, p.y);
+    const now = Date.now();
+    if(now - lastCheck > 150){
+      lastCheck = now;
+      checkCleared();
+    }
+  }
+
+  canvas.addEventListener('mousedown', (e)=>{ isScratching = true; const p=getPos(e); scratchAt(p.x,p.y); });
+  canvas.addEventListener('touchstart', (e)=>{ isScratching = true; const p=getPos(e); scratchAt(p.x,p.y); }, {passive:false});
+  window.addEventListener('mousemove', handleScratchMove);
+  window.addEventListener('touchmove', handleScratchMove, {passive:false});
+  window.addEventListener('mouseup', ()=> isScratching = false);
+  window.addEventListener('touchend', ()=> isScratching = false);
+
+  // init scratch canvas once its screen becomes active
+  const scratchObserver = new MutationObserver(()=>{
+    if(screens.scratch.classList.contains('active') && !scratchInit){
+      requestAnimationFrame(initScratch);
+    }
+  });
+  scratchObserver.observe(screens.scratch, {attributes:true, attributeFilter:['class']});
+
+  revealBtn.addEventListener('click', ()=>{
+    showFinal();
+  });
+
+  // ---------------- SCREEN 4: final message ----------------
+  const finalName = document.getElementById('finalName');
+  const finalBody = document.getElementById('finalBody');
+  const soundToggle = document.getElementById('soundToggle');
+
+  const MESSAGE_TEMPLATE = `Thank you so much for the beautiful wishes, thoughtful cards, and lovely surprise. Your love, respect, and efforts truly touched my heart. ❤️
+
+May Allah bless you all with knowledge, success, happiness, and a bright future. May He always guide you towards what is best and make you good human beings. Ameen. 🤲
+
+Your gesture will always be a beautiful memory for me.
+
+Thank you once again, my dear students. ❤️`;
+
+  let soundOn = true;
+  let audioCtx = null;
+  let musicNodes = [];
+  let musicPlaying = false;
+
+  function showFinal(){
+    finalName.textContent = studentName || 'Students';
+    finalBody.textContent = '';
+    goTo('final');
+    app.classList.add('celebrate');
+    currentSet = celebrateIcons;
+    startFloating(260);
+    typeMessage();
+    playMusic();
+  }
+
+  function typeMessage(){
+    let i = 0;
+    const text = MESSAGE_TEMPLATE;
+    const interval = setInterval(()=>{
+      finalBody.textContent = text.slice(0, i);
+      i++;
+      if(i > text.length) clearInterval(interval);
+    }, 14);
+  }
+
+  // ---- gentle generative melody via Web Audio (no external files needed) ----
+  function playMusic(){
+    if(!soundOn) return;
+    try{
+      audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+    }catch(e){ return; }
+
+    const masterGain = audioCtx.createGain();
+    masterGain.gain.value = 0.0;
+    masterGain.connect(audioCtx.destination);
+    masterGain.gain.linearRampToValueAtTime(0.16, audioCtx.currentTime + 1.2);
+    musicNodes.push(masterGain);
+
+    // pentatonic-ish gentle melody, loops
+    const notes = [523.25, 587.33, 659.25, 783.99, 880.00, 783.99, 659.25, 587.33]; // C5 D5 E5 G5 A5 G5 E5 D5
+    const noteDur = 0.55;
+    let t = audioCtx.currentTime + 0.3;
+
+    function scheduleLoop(startTime){
+      notes.forEach((freq, idx)=>{
+        const osc = audioCtx.createOscillator();
+        const gain = audioCtx.createGain();
+        osc.type = 'sine';
+        osc.frequency.value = freq;
+        gain.gain.setValueAtTime(0, startTime + idx*noteDur);
+        gain.gain.linearRampToValueAtTime(0.5, startTime + idx*noteDur + 0.08);
+        gain.gain.exponentialRampToValueAtTime(0.001, startTime + idx*noteDur + noteDur*0.95);
+        osc.connect(gain);
+        gain.connect(masterGain);
+        osc.start(startTime + idx*noteDur);
+        osc.stop(startTime + idx*noteDur + noteDur);
+        musicNodes.push(osc, gain);
+
+        // soft harmony note an octave + third below
+        const osc2 = audioCtx.createOscillator();
+        const gain2 = audioCtx.createGain();
+        osc2.type = 'triangle';
+        osc2.frequency.value = freq/2;
+        gain2.gain.setValueAtTime(0, startTime + idx*noteDur);
+        gain2.gain.linearRampToValueAtTime(0.15, startTime + idx*noteDur + 0.1);
+        gain2.gain.exponentialRampToValueAtTime(0.001, startTime + idx*noteDur + noteDur*0.9);
+        osc2.connect(gain2);
+        gain2.connect(masterGain);
+        osc2.start(startTime + idx*noteDur);
+        osc2.stop(startTime + idx*noteDur + noteDur);
+        musicNodes.push(osc2, gain2);
+      });
+    }
+
+    const loopLen = notes.length * noteDur;
+    scheduleLoop(t);
+    scheduleLoop(t + loopLen);
+    scheduleLoop(t + loopLen*2);
+    musicPlaying = true;
+
+    // keep scheduling ahead while on final screen
+    let loopCount = 3;
+    const scheduler = setInterval(()=>{
+      if(!musicPlaying || !screens.final.classList.contains('active')){
+        clearInterval(scheduler);
+        return;
+      }
+      scheduleLoop(t + loopLen*loopCount);
+      loopCount++;
+    }, loopLen*1000);
+  }
+
+  function stopMusic(){
+    musicPlaying = false;
+    if(audioCtx){
+      try{ audioCtx.close(); }catch(e){}
+    }
+  }
+
+  soundToggle.addEventListener('click', ()=>{
+    soundOn = !soundOn;
+    soundToggle.textContent = soundOn ? '🔊 SOUND: ON' : '🔇 SOUND: OFF';
+    if(!soundOn){
+      stopMusic();
+    } else {
+      playMusic();
+    }
+  });
+
+})();
+</script>
+</body>
+</html>
